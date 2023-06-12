@@ -117,37 +117,37 @@ class SuperResolutionTestDataset(Dataset):
 transform_img_train = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
+            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
      ])
 
 transform_target_train = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
+            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
      ])
 
 transform_img_val = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
+            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
      ])
 
 transform_target_val = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
+            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
      ])
 
 transform_img_set5 = transforms.Compose(
         [
             transforms.ToTensor(),
-            transforms.Normalize((0.4236, 0.4284, 0.5598), (0.2714, 0.0752, 0.0638))
+            # transforms.Normalize((0.4236, 0.4284, 0.5598), (0.2714, 0.0752, 0.0638))
      ])
 
 transform_target_set5 = transforms.Compose(
     [
         transforms.ToTensor(),
-        transforms.Normalize((0.4236, 0.4284, 0.5598), (0.2714, 0.0752, 0.0638))
+        # transforms.Normalize((0.4236, 0.4284, 0.5598), (0.2714, 0.0752, 0.0638))
     ])
 
 trainset = SuperResolutionTrainDataset(dataset_train, transform_img_train, transform_target_train)
@@ -187,7 +187,6 @@ class WaveMix(nn.Module):
         )
 
         self.path2 = nn.Sequential(
-            # nn.ConvTranspose2d(2, 2, 2, stride = 2)
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
         )
 
@@ -223,7 +222,7 @@ scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'set5_2x_y.pth'
+PATH = 'set5_2x_y_nonorm.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)
