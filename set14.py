@@ -158,7 +158,7 @@ print(len(trainset))
 testset = SuperResolutionTestDataset(dataset_set14, transform_img_set14, transform_target_set14)
 print(len(testset))
 
-class WaveMix(nn.Module):
+class WaveMixSR(nn.Module):
     def __init__(
         self,
         *,
@@ -208,7 +208,7 @@ class WaveMix(nn.Module):
         
         return  torch.cat((y,crcb), dim=1)
 
-model = WaveMix(
+model = WaveMixSR(
     depth = 4,
     mult = 1,
     ff_channel = 144,
@@ -235,7 +235,7 @@ psnr = PeakSignalNoiseRatio().to(device)
 ssim = StructuralSimilarityIndexMeasure().to(device)
 
 
-model.load_state_dict(torch.load(PATH))
+
 criterion =  nn.HuberLoss() 
 
 scaler = torch.cuda.amp.GradScaler()
