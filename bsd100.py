@@ -158,7 +158,7 @@ print(len(trainset))
 testset = SuperResolutionTestDataset(dataset_bsd100, transform_img_bsd100, transform_target_bsd100)
 print(len(testset))
 
-class WaveMix(nn.Module):
+class WaveMixSR(nn.Module):
     def __init__(
         self,
         *,
@@ -208,7 +208,7 @@ class WaveMix(nn.Module):
         
         return  torch.cat((y,crcb), dim=1)
 
-model = WaveMix(
+model = WaveMixSR(
     depth = 4,
     mult = 1,
     ff_channel = 144,
