@@ -185,13 +185,13 @@ class WaveMixSR(nn.Module):
 
 
         self.path1 = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
+            nn.Upsample(scale_factor=2, mode='bicubic', align_corners = False),
             nn.Conv2d(1, int(final_dim/2), 3, 1, 1),
             nn.Conv2d(int(final_dim/2), final_dim, 3, 1, 1)
         )
 
         self.path2 = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
+            nn.Upsample(scale_factor=2, mode='bicubic', align_corners = False),
         )
 
     def forward(self, img):
@@ -396,6 +396,10 @@ while counter < 25:  # loop over the dataset multiple times
 
 print('Finished Training')
 model.load_state_dict(torch.load(PATH))
+
+print('Results for Div2k val')
+print(f"PSNR_y: {float(max(toppsnr)):.4f} - SSIM_y: {float(max(topssim)):.4f}  - Test Time: {min(testtime):.0f}\n")
+
 
 PSNR_y = 0
 SSIM_y = 0
