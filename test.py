@@ -17,51 +17,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(torch.cuda.get_device_properties(device))
 
 
-# class WaveMix(nn.Module):
-#     def __init__(
-#         self,
-#         *,
-#         depth,
-#         mult = 1,
-#         ff_channel = 16,
-#         final_dim = 16,
-#         dropout = 0.3,
-#     ):
-#         super().__init__()
-        
-#         self.layers = nn.ModuleList([])
-#         for _ in range(depth):
-#             self.layers.append(Level1Waveblock(mult = mult, ff_channel = ff_channel, final_dim = final_dim, dropout = dropout))
-        
-#         self.final = nn.Sequential(
-#             nn.Conv2d(final_dim,int(final_dim/2), 3, stride=1, padding=1),
-#             nn.Conv2d(int(final_dim/2), 3, 1)
-#         )
-
-
-#         self.path1 = nn.Sequential(
-#             nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
-#             nn.Conv2d(3, int(final_dim/2), 3, 1, 1),
-#             nn.Conv2d(int(final_dim/2), final_dim, 3, 1, 1)
-#         )
-
-#         self.path2 = nn.Sequential(
-#             nn.ConvTranspose2d(3, 3, 2, stride = 2)
-#         )
-
-#     def forward(self, img):
-
-#         x1 = self.path1(img)
-
-
-#         for attn in self.layers:
-#             x1 = attn(x1) + x1
-
-#         x1 = self.final(x1)
-
-#         x2 = self.path2(img)
-        
-#         return  x1 + x2
 
 class WaveMix(nn.Module):
     def __init__(
