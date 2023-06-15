@@ -222,7 +222,7 @@ scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'set5_2x_y_nonorm.pth'
+PATH = 'set5_2x_y.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)
@@ -287,9 +287,6 @@ while counter < 25:
 
             outputs = outputs[:, 0:1, :, :]
             labels = labels[:, 0:1, :, :]
-
-    
-      
            
             PSNR += psnr(outputs, labels) / len(testloader)
             sim += structural_similarity_index_measure(outputs, labels) / len(testloader)
@@ -355,7 +352,6 @@ while counter < 25:  # loop over the dataset multiple times
             outputs = outputs[:, 0:1, :, :]
             labels = labels[:, 0:1, :, :]
 
-        
             PSNR += psnr(outputs, labels) / len(testloader)
             sim += structural_similarity_index_measure(outputs, labels) / len(testloader)
 

@@ -185,13 +185,13 @@ class WaveMixSR(nn.Module):
 
 
         self.path1 = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bicubic', align_corners = False),
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
             nn.Conv2d(1, int(final_dim/2), 3, 1, 1),
             nn.Conv2d(int(final_dim/2), final_dim, 3, 1, 1)
         )
 
         self.path2 = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bicubic', align_corners = False),
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
         )
 
     def forward(self, img):
@@ -226,7 +226,7 @@ scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'sisr_2x_div2k_ymodel.pth'
+PATH = 'sisr_2x_div2k_y.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)

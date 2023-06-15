@@ -223,7 +223,7 @@ scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'bsd100_2x_y_nonorm.pth'
+PATH = 'bsd100_2x_y.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)

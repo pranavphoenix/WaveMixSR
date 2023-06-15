@@ -29,7 +29,7 @@ torch.backends.cudnn.deterministic = True
 
 dataset_train     = load_dataset('eugenesiow/Div2k', 'bicubic_x2', split='train', cache_dir = '/workspace/')
 dataset_val       = load_dataset('eugenesiow/Div2k', 'bicubic_x2', split='validation', cache_dir = '/workspace/')
-dataset_urban100      = load_dataset('eugenesiow/Urban100', 'bicubic_x2', split='validation', cache_dir = '/workspace/')
+dataset_urban100  = load_dataset('eugenesiow/Urban100', 'bicubic_x2', split='validation', cache_dir = '/workspace/')
 
 class SuperResolutionTrainDataset(Dataset):
     def __init__(self, dataset, transform_img=None, transform_target=None):
@@ -223,7 +223,7 @@ scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'urban100_2x_y_nonorm.pth'
+PATH = 'urban100_2x_y.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)
