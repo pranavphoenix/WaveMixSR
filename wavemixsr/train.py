@@ -26,14 +26,15 @@ torch.backends.cudnn.deterministic = True
 
 parser = argparse.ArgumentParser()
 
+parser.add_argument("-x", "--resolution", default='2', help = "Resolution to be expanded to: 2, 3, 4")
 parser.add_argument("-test", "--test_dataset", default='Set5', help = "Dataset used for testing: Set5, Set14, BSD100, Urban100")
 parser.add_argument("-metric", "--eval_metric", default='psnr', help = "Evaluation Metric used for training: psnr or ssim")
 
 args = parser.parse_args()
 
-dataset_train = load_dataset('eugenesiow/Div2k', 'bicubic_x2', split='train', cache_dir = '/workspace/')
-dataset_val = load_dataset('eugenesiow/Div2k', 'bicubic_x2', split='validation', cache_dir = '/workspace/')
-dataset_test = load_dataset('eugenesiow/'+str(args.test_dataset), 'bicubic_x2', split='validation', cache_dir = '/workspace/')
+dataset_train = load_dataset('eugenesiow/Div2k', 'bicubic_x'+str(args.resolution), split='train', cache_dir = '/workspace/')
+dataset_val = load_dataset('eugenesiow/Div2k', 'bicubic_x'+str(args.resolution), split='validation', cache_dir = '/workspace/')
+dataset_test = load_dataset('eugenesiow/'+str(args.test_dataset), 'bicubic_x'+str(args.resolution), split='validation', cache_dir = '/workspace/')
 
 class SuperResolutionTrainDataset(Dataset):
     def __init__(self, dataset, transform_img=None, transform_target=None):
@@ -85,9 +86,27 @@ class SuperResolutionTestDataset(Dataset):
         
         if lr == 'lr':
 
-            image_size = image.size
+            image_size = list(image.size)
 
-            h , w = 2*image_size[0], 2*image_size[1]
+            if image_size[0]%2 != 0 and image_size[1]%2 != 0:
+                image_size[0] = image_size[0] - 1
+                image_size[1] = image_size[1] - 1
+                t  = transforms.Resize([image_size[0], image_size[1]])
+                image = t(image)
+
+            if image_size[0]%2 != 0 and image_size[1]%2 == 0:
+                image_size[0] = image_size[0] - 1
+                t  = transforms.Resize([image_size[0], image_size[1]])
+                image = t(image)
+
+            if image_size[0]%2 == 0 and image_size[1]%2 != 0:
+                image_size[1] = image_size[1] - 1
+                t  = transforms.Resize([image_size[0], image_size[1]])
+                image = t(image)
+
+            
+
+            h , w = int(args.resolution)*image_size[0], int(args.resolution)*image_size[1]
 
 
         target_path = self.dataset[idx]["hr"] 
@@ -185,13 +204,13 @@ class WaveMixSR(nn.Module):
 
 
         self.path1 = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
+            nn.Upsample(scale_factor=int(args.resolution), mode='bilinear', align_corners = False),
             nn.Conv2d(1, int(final_dim/2), 3, 1, 1),
             nn.Conv2d(int(final_dim/2), final_dim, 3, 1, 1)
         )
 
         self.path2 = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
+            nn.Upsample(scale_factor=int(args.resolution), mode='bilinear', align_corners = False),
         )
 
     def forward(self, img):
@@ -226,7 +245,7 @@ scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'sisr_2x_div2k_y.pth'
+PATH = str(args.test_dataset)+'_'+str(args.resolution)+'x_y_Div2k_'+str(args.eval_metric)+'.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)
@@ -419,7 +438,7 @@ with torch.no_grad():
         SSIM_y += float(ssim(outputs_ychannel, labels_ychannel)) / len(testloader)
 
 
-
+print("Training and Validating in Div2k")
 print(f"Dataset\n")
 print(str(args.test_dataset))
 print(f"Train Time: {min(traintime):.0f} -Test Time: {min(testtime):.0f}\n")
