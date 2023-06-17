@@ -341,7 +341,7 @@ while counter < 25:
             print(1)
             counter = 0
 
-
+counter  = 0
 model.load_state_dict(torch.load(PATH))
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) #Second Optimizer
 

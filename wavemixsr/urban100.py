@@ -343,7 +343,7 @@ while counter < 25:
 
 model.load_state_dict(torch.load(PATH))
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) #Second Optimizer
-
+counter  = 0
 while counter < 25:  # loop over the dataset multiple times
     t0 = time.time()
     epoch_psnr = 0
