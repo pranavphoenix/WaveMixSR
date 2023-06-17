@@ -16,7 +16,7 @@ from torchmetrics import StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 from torchmetrics.functional import structural_similarity_index_measure
 
 from torch.utils.data import ConcatDataset
-
+import argparse
 import kornia
 import wavemix
 from wavemix import Level1Waveblock
@@ -27,9 +27,16 @@ print(torch.cuda.get_device_properties(device))
 torch.backends.cudnn.benchmarks = True
 torch.backends.cudnn.deterministic = True
 
-dataset_train     = load_dataset('eugenesiow/Div2k', 'bicubic_x2', split='train', cache_dir = '/workspace/')
-dataset_val       = load_dataset('eugenesiow/Div2k', 'bicubic_x2', split='validation', cache_dir = '/workspace/')
-dataset_urban100  = load_dataset('eugenesiow/Urban100', 'bicubic_x2', split='validation', cache_dir = '/workspace/')
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-x", "--resolution", default='2', help = "Resolution to be expanded to: 2, 3, 4")
+parser.add_argument("-metric", "--eval_metric", default='psnr', help = "Evaluation Metric used for training: psnr or ssim")
+
+args = parser.parse_args()
+
+dataset_train     = load_dataset('eugenesiow/Div2k', 'bicubic_x'+str(args.resolution), split='train', cache_dir = '/workspace/')
+dataset_val       = load_dataset('eugenesiow/Div2k', 'bicubic_x'+str(args.resolution), split='validation', cache_dir = '/workspace/')
+dataset_urban100      = load_dataset('eugenesiow/Urban100', 'bicubic_x'+str(args.resolution), split='validation', cache_dir = '/workspace/')
 
 class SuperResolutionTrainDataset(Dataset):
     def __init__(self, dataset, transform_img=None, transform_target=None):
@@ -81,9 +88,25 @@ class SuperResolutionTestDataset(Dataset):
         
         if lr == 'lr':
 
-            image_size = image.size
+            image_size = list(image.size)
 
-            h , w = 2*image_size[0], 2*image_size[1]
+            if image_size[0]%2 != 0 and image_size[1]%2 != 0:
+                image_size[0] = image_size[0] - 1
+                image_size[1] = image_size[1] - 1
+                t  = transforms.Resize([image_size[0], image_size[1]])
+                image = t(image)
+
+            if image_size[0]%2 != 0 and image_size[1]%2 == 0:
+                image_size[0] = image_size[0] - 1
+                t  = transforms.Resize([image_size[0], image_size[1]])
+                image = t(image)
+
+            if image_size[0]%2 == 0 and image_size[1]%2 != 0:
+                image_size[1] = image_size[1] - 1
+                t  = transforms.Resize([image_size[0], image_size[1]])
+                image = t(image)
+
+            h , w = int(args.resolution)*image_size[0], int(args.resolution)*image_size[1]
 
 
         target_path = self.dataset[idx]["hr"] 
@@ -158,7 +181,7 @@ print(len(trainset))
 testset = SuperResolutionTestDataset(dataset_urban100, transform_img_urban100, transform_target_urban100)
 print(len(testset))
 
-class WaveMixSR(nn.Module):
+class WaveMix(nn.Module):
     def __init__(
         self,
         *,
@@ -181,14 +204,14 @@ class WaveMixSR(nn.Module):
 
 
         self.path1 = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
+            nn.Upsample(scale_factor=int(args.resolution), mode='bicubic', align_corners = False),
             nn.Conv2d(1, int(final_dim/2), 3, 1, 1),
             nn.Conv2d(int(final_dim/2), final_dim, 3, 1, 1)
         )
 
         self.path2 = nn.Sequential(
             # nn.ConvTranspose2d(2, 2, 2, stride = 2)
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners = False),
+            nn.Upsample(scale_factor=int(args.resolution), mode='bicubic', align_corners = False),
         )
 
     def forward(self, img):
@@ -208,7 +231,7 @@ class WaveMixSR(nn.Module):
         
         return  torch.cat((y,crcb), dim=1)
 
-model = WaveMixSR(
+model = WaveMix(
     depth = 4,
     mult = 1,
     ff_channel = 144,
@@ -217,13 +240,13 @@ model = WaveMixSR(
 )
 
 model.to(device)
-summary(model, input_size=(1, 3, 512, 512), col_names= ("input_size","output_size","num_params","mult_adds"), depth = 4)
+summary(model, input_size=(1, 3, 256, 256), col_names= ("input_size","output_size","num_params","mult_adds"), depth = 4)
 
 scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'urban100_2x_y.pth'
+PATH = 'urban100_'+str(args.resolution)+'x_y_'+str(args.eval_metric)+'.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)
@@ -305,11 +328,17 @@ while counter < 25:
     counter += 1
     epoch += 1
 
-    # if float(sim) >= float(max(top1)):
-    if float(PSNR) >= float(max(toppsnr)):
-        torch.save(model.state_dict(), PATH)
-        print(1)
-        counter = 0
+    if args.eval_metric == 'psnr':
+        if float(PSNR) >= float(max(toppsnr)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
+
+    else:
+        if float(sim) >= float(max(topssim)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
 
 
 model.load_state_dict(torch.load(PATH))
@@ -371,11 +400,17 @@ while counter < 25:  # loop over the dataset multiple times
     epoch += 1
     counter += 1
 
-    # if float(sim) >= float(max(top1)):
-    if float(PSNR) >= float(max(toppsnr)):
-        torch.save(model.state_dict(), PATH)
-        print(1)
-        counter = 0
+    if args.eval_metric == 'psnr':
+        if float(PSNR) >= float(max(toppsnr)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
+
+    else:
+        if float(sim) >= float(max(topssim)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
 
 print('Finished Training')
 model.load_state_dict(torch.load(PATH))
@@ -404,4 +439,3 @@ print(f"Urban100 Dataset\n")
 print(f"Train Time: {min(traintime):.0f} -Test Time: {min(testtime):.0f}\n")
 print("In Y Space")
 print(f"PSNR: {PSNR_y:.2f} - SSIM: {SSIM_y:.4f}\n")
-
