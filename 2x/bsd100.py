@@ -30,6 +30,7 @@ torch.backends.cudnn.deterministic = True
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-x", "--resolution", default='2', help = "Resolution to be expanded to: 2, 3, 4")
+parser.add_argument("-metric", "--eval_metric", default='psnr', help = "Evaluation Metric used for training: psnr or ssim")
 
 args = parser.parse_args()
 
@@ -245,7 +246,7 @@ scaler = torch.cuda.amp.GradScaler()
 
 batch_size = 1
 
-PATH = 'bsd100_'+str(args.resolution)+'x_y_nonorm.pth'
+PATH = 'bsd100_'+str(args.resolution)+'x_y_'+str(args.eval_metric)+'.pth'
 
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                          shuffle=False, num_workers=2, pin_memory=True, prefetch_factor=2, persistent_workers=2)
@@ -327,11 +328,17 @@ while counter < 25:
     counter += 1
     epoch += 1
 
-    # if float(sim) >= float(max(topssim)):
-    if float(PSNR) >= float(max(toppsnr)):
-        torch.save(model.state_dict(), PATH)
-        print(1)
-        counter = 0
+    if args.eval_metric == 'psnr':
+        if float(PSNR) >= float(max(toppsnr)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
+
+    else:
+        if float(sim) >= float(max(topssim)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
 
 
 model.load_state_dict(torch.load(PATH))
@@ -393,11 +400,17 @@ while counter < 25:  # loop over the dataset multiple times
     epoch += 1
     counter += 1
 
-    # if float(sim) >= float(max(topssim)):
-    if float(PSNR) >= float(max(toppsnr)):
-        torch.save(model.state_dict(), PATH)
-        print(1)
-        counter = 0
+    if args.eval_metric == 'psnr':
+        if float(PSNR) >= float(max(toppsnr)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
+
+    else:
+        if float(sim) >= float(max(topssim)):
+            torch.save(model.state_dict(), PATH)
+            print(1)
+            counter = 0
 
 print('Finished Training')
 model.load_state_dict(torch.load(PATH))
