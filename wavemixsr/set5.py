@@ -141,12 +141,9 @@ trainset = SuperResolutionTrainDataset(dataset_train)
 valset   = SuperResolutionTrainDataset(dataset_val)
 
 
-trainset = SuperResolutionTrainDataset(dataset_train, transform_img_train, transform_target_train)
-valset = SuperResolutionTrainDataset(dataset_val, transform_img_val, transform_target_val)
-
 trainset = ConcatDataset([trainset, valset])
 print(len(trainset))
-testset = SuperResolutionTestDataset(dataset_set5, transform_img_set5, transform_target_set5)
+testset = SuperResolutionTestDataset(dataset_set5)
 print(len(testset))
 
 class WaveMix(nn.Module):
