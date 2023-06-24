@@ -39,10 +39,10 @@ dataset_val       = load_dataset('eugenesiow/Div2k', 'bicubic_x'+str(args.resolu
 dataset_bsd100    = load_dataset('eugenesiow/BSD100', 'bicubic_x'+str(args.resolution), split='validation', cache_dir = '/workspace/')
 
 class SuperResolutionTrainDataset(Dataset):
-    def __init__(self, dataset, transform_img=None, transform_target=None):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.transform_img = transform_img
-        self.transform_target = transform_target
+        self.transform = transforms.ToTensor()
+        
 
     def __len__(self):
         return len(self.dataset)
@@ -54,13 +54,13 @@ class SuperResolutionTrainDataset(Dataset):
         target_path = self.dataset[idx]["hr"] 
         target = Image.open(target_path)
 
-        if self.transform_img:
-            image = self.transform_img(image)
+        
+        image = self.transform(image)
 
         image = kornia.color.rgb_to_ycbcr(image)
 
-        if self.transform_target:
-            target = self.transform_target(target)
+        
+        target = self.transform(target)
 
         target = kornia.color.rgb_to_ycbcr(target)
 
@@ -68,10 +68,10 @@ class SuperResolutionTrainDataset(Dataset):
 
 
 class SuperResolutionTestDataset(Dataset):
-    def __init__(self, dataset, transform_img=None, transform_target=None):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.transform_img = transform_img
-        self.transform_target = transform_target
+        self.transform = transforms.ToTensor()
+        
 
     def __len__(self):
         return len(self.dataset)
@@ -123,62 +123,26 @@ class SuperResolutionTestDataset(Dataset):
                 target = t(target)
 
         
-
-        if self.transform_img:
-            image = self.transform_img(image)
+        image = self.transform(image)
 
         image = kornia.color.rgb_to_ycbcr(image)
 
-        if self.transform_target:
-            target = self.transform_target(target)
+        
+        target = self.transform(target)
 
         target = kornia.color.rgb_to_ycbcr(target)
 
         return image, target
 
 
-transform_img_train = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
 
-transform_target_train = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
 
-transform_img_val = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
-
-transform_target_val = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
-
-transform_img_bsd100 = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4238, 0.4696, 0.5007), (0.2303, 0.0592, 0.0523))
-     ])
-
-transform_target_bsd100 = transforms.Compose(
-    [
-        transforms.ToTensor(),
-        # transforms.Normalize((0.4238, 0.4696, 0.5007), (0.2303, 0.0592, 0.0523))
-    ])
-
-trainset = SuperResolutionTrainDataset(dataset_train, transform_img_train, transform_target_train)
-valset = SuperResolutionTrainDataset(dataset_val, transform_img_val, transform_target_val)
+trainset = SuperResolutionTrainDataset(dataset_train)
+valset   = SuperResolutionTrainDataset(dataset_val)
 
 trainset = ConcatDataset([trainset, valset])
 print(len(trainset))
-testset = SuperResolutionTestDataset(dataset_bsd100, transform_img_bsd100, transform_target_bsd100)
+testset = SuperResolutionTestDataset(dataset_bsd100)
 print(len(testset))
 
 class WaveMix(nn.Module):
@@ -210,7 +174,6 @@ class WaveMix(nn.Module):
         )
 
         self.path2 = nn.Sequential(
-            # nn.ConvTranspose2d(2, 2, 2, stride = 2)
             nn.Upsample(scale_factor=int(args.resolution), mode='bilinear', align_corners = False),
         )
 
@@ -312,9 +275,6 @@ while counter < 25:
             outputs = outputs[:, 0:1, :, :]
             labels = labels[:, 0:1, :, :]
 
-    
-      
-           
             PSNR += psnr(outputs, labels) / len(testloader)
             sim += structural_similarity_index_measure(outputs, labels) / len(testloader)
 

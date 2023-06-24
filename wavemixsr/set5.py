@@ -39,10 +39,10 @@ dataset_val       = load_dataset('eugenesiow/Div2k', 'bicubic_x'+str(args.resolu
 dataset_set5      = load_dataset('eugenesiow/Set5', 'bicubic_x'+str(args.resolution), split='validation', cache_dir = '/workspace/')
 
 class SuperResolutionTrainDataset(Dataset):
-    def __init__(self, dataset, transform_img=None, transform_target=None):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.transform_img = transform_img
-        self.transform_target = transform_target
+        self.transform = transforms.ToTensor()
+        
 
     def __len__(self):
         return len(self.dataset)
@@ -54,13 +54,13 @@ class SuperResolutionTrainDataset(Dataset):
         target_path = self.dataset[idx]["hr"] 
         target = Image.open(target_path)
 
-        if self.transform_img:
-            image = self.transform_img(image)
+        
+        image = self.transform(image)
 
         image = kornia.color.rgb_to_ycbcr(image)
 
-        if self.transform_target:
-            target = self.transform_target(target)
+        
+        target = self.transform(target)
 
         target = kornia.color.rgb_to_ycbcr(target)
 
@@ -68,10 +68,10 @@ class SuperResolutionTrainDataset(Dataset):
 
 
 class SuperResolutionTestDataset(Dataset):
-    def __init__(self, dataset, transform_img=None, transform_target=None):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.transform_img = transform_img
-        self.transform_target = transform_target
+        self.transform = transforms.ToTensor()
+        
 
     def __len__(self):
         return len(self.dataset)
@@ -106,10 +106,7 @@ class SuperResolutionTestDataset(Dataset):
                 t  = transforms.Resize([image_size[0], image_size[1]])
                 image = t(image)
 
-            
-
             h , w = int(args.resolution)*image_size[0], int(args.resolution)*image_size[1]
-
 
 
         target_path = self.dataset[idx]["hr"] 
@@ -126,55 +123,23 @@ class SuperResolutionTestDataset(Dataset):
                 target = t(target)
 
         
-
-        if self.transform_img:
-            image = self.transform_img(image)
+        image = self.transform(image)
 
         image = kornia.color.rgb_to_ycbcr(image)
 
-        if self.transform_target:
-            target = self.transform_target(target)
+        
+        target = self.transform(target)
 
         target = kornia.color.rgb_to_ycbcr(target)
 
         return image, target
 
 
-transform_img_train = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
 
-transform_target_train = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
 
-transform_img_val = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
+trainset = SuperResolutionTrainDataset(dataset_train)
+valset   = SuperResolutionTrainDataset(dataset_val)
 
-transform_target_val = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4360, 0.4823, 0.5074), (0.2653, 0.0787, 0.0733))
-     ])
-
-transform_img_set5 = transforms.Compose(
-        [
-            transforms.ToTensor(),
-            # transforms.Normalize((0.4236, 0.4284, 0.5598), (0.2714, 0.0752, 0.0638))
-     ])
-
-transform_target_set5 = transforms.Compose(
-    [
-        transforms.ToTensor(),
-        # transforms.Normalize((0.4236, 0.4284, 0.5598), (0.2714, 0.0752, 0.0638))
-    ])
 
 trainset = SuperResolutionTrainDataset(dataset_train, transform_img_train, transform_target_train)
 valset = SuperResolutionTrainDataset(dataset_val, transform_img_val, transform_target_val)
