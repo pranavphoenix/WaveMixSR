@@ -3,7 +3,7 @@ import torch.nn as nn
 import wavemix
 from wavemix import Level1Waveblock
 
-class WaveMix(nn.Module):
+class WaveMixSR(nn.Module):
     def __init__(
         self,
         *,
@@ -51,7 +51,7 @@ class WaveMix(nn.Module):
         
         return  torch.cat((y,crcb), dim=1)
 
-model = WaveMix(
+model = WaveMixSR(
     depth = 4,
     mult = 1,
     ff_channel = 144,
