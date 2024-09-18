@@ -1,4 +1,7 @@
-# WaveMixSR
+# WaveMixSR 
+## WaveMixSR-V2
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/wavemixsr-v2-enhancing-super-resolution-with/image-super-resolution-on-bsd100-2x-upscaling)](https://paperswithcode.com/sota/image-super-resolution-on-bsd100-2x-upscaling?p=wavemixsr-v2-enhancing-super-resolution-with)
+
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/wavemixsr-a-resource-efficient-neural-network/image-super-resolution-on-bsd100-2x-upscaling)](https://paperswithcode.com/sota/image-super-resolution-on-bsd100-2x-upscaling?p=wavemixsr-a-resource-efficient-neural-network)
 
 Single Image Super Resolution Using WaveMix
