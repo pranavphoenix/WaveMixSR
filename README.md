@@ -14,4 +14,13 @@ Single Image Super Resolution Using WaveMix
     year      = {2024},
     pages     = {5884-5892}
 }
+@misc{jeevan2024wavemixsrv2enhancingsuperresolutionhigher,
+      title={WaveMixSR-V2: Enhancing Super-resolution with Higher Efficiency}, 
+      author={Pranav Jeevan and Neeraj Nixon and Amit Sethi},
+      year={2024},
+      eprint={2409.10582},
+      archivePrefix={arXiv},
+      primaryClass={eess.IV},
+      url={https://arxiv.org/abs/2409.10582}, 
+}
 ```
